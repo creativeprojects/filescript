@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/creativeprojects/filescript/utils"
+	"github.com/creativeprojects/filescript/fsutils"
 	"github.com/spf13/cobra"
 )
 
@@ -66,7 +66,7 @@ func runMove(cmd *cobra.Command, args []string) error {
 		orig := filepath.Join(dir, entry.Name())
 		moveTo := filepath.Join(dir, year, entry.Name())
 
-		newpath, err := utils.Rename(orig, moveTo)
+		newpath, err := fsutils.Rename(orig, moveTo)
 		if err != nil {
 			log.Fatal(err)
 		}
