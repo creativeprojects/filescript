@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/creativeprojects/filescript/fsutils"
 	"github.com/spf13/cobra"
 )
 
@@ -38,22 +39,12 @@ func runEmpty(cmd *cobra.Command, args []string) error {
 	}
 	dir = filepath.Clean(dir)
 
-	pathCount := make(map[string]int)
-	pathCount[dir] = 0
-
-	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			pathCount[path] = 0
-		}
-		parent := filepath.Dir(path)
-		if _, found := pathCount[parent]; !found {
-			fmt.Printf("%s => not found\n", parent)
-			return nil
-		}
-		fmt.Printf("%s\n", path)
-		pathCount[parent]++
-		return nil
+	pathCount, err := fsutils.CountFiles(context.Background(), dir, func(event fsutils.Event) bool {
+		return true
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	iteration := 0
 	total := 0

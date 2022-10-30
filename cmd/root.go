@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/creativeprojects/filescript/term"
 	"github.com/spf13/cobra"
@@ -17,9 +18,10 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initLog)
+	cobra.OnInitialize(initLog, defaultDir)
 	flag := rootCmd.PersistentFlags()
 	flag.StringVarP(&global.dir, "dir", "d", "", "working directory (default to current directory)")
+	flag.BoolVarP(&global.write, "write", "w", false, "write updates to the disk (default to dry-run)")
 	flag.BoolVarP(&global.quiet, "quiet", "q", false, "only display warnings and errors")
 	flag.BoolVarP(&global.verbose, "verbose", "v", false, "display debugging information")
 }
@@ -31,6 +33,16 @@ func initLog() {
 	case global.quiet:
 		term.SetLevel(term.LevelWarn)
 	}
+	if !global.write {
+		term.Info("running in dry-mode, please add '-w' flag to write to the disk")
+	}
+}
+
+func defaultDir() {
+	if global.dir == "" {
+		global.dir, _ = os.Getwd()
+	}
+	global.dir = filepath.Clean(global.dir)
 }
 
 func Execute(buildVersion, buildCommit, buildDate, buildBy string) {

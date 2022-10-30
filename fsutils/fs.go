@@ -3,9 +3,9 @@ package fsutils
 import "github.com/spf13/afero"
 
 var (
-	fs afero.Fs
+	Fs afero.Fs
 )
 
 func init() {
-	fs = afero.NewOsFs()
+	Fs = afero.NewOsFs()
 }

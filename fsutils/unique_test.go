@@ -9,15 +9,15 @@ import (
 )
 
 func TestUniqueFilename(t *testing.T) {
-	fs = afero.NewMemMapFs()
-	require.NoError(t, fs.MkdirAll("/root/path", 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/a", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/b", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/b-1", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/c-1.txt", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/d.txt", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/d-1.txt", []byte("a"), 0777))
-	require.NoError(t, afero.WriteFile(fs, "/root/path/d-2.txt", []byte("a"), 0777))
+	Fs = afero.NewMemMapFs()
+	require.NoError(t, Fs.MkdirAll("/root/path", 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/a", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/b", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/b-1", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/c-1.txt", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/d.txt", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/d-1.txt", []byte("a"), 0777))
+	require.NoError(t, afero.WriteFile(Fs, "/root/path/d-2.txt", []byte("a"), 0777))
 
 	fixtures := []struct {
 		filename string

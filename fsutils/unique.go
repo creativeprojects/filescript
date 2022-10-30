@@ -27,7 +27,7 @@ func FindUniqueName(name string) (string, error) {
 	}
 	number := 0
 	for {
-		found, err := afero.Exists(fs, name)
+		found, err := afero.Exists(Fs, name)
 		if err != nil {
 			return name, err
 		}
