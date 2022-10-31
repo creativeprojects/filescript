@@ -45,7 +45,6 @@ func orphans(dir string) error {
 	if err != nil {
 		return err
 	}
-	defer spinner.Stop()
 
 	progress := func(event fsutils.Event) bool {
 		switch event.Type {
@@ -72,8 +71,12 @@ func orphans(dir string) error {
 	defer stop()
 
 	orphans, err := fsutils.FindOrphans(ctx, dir, "._", "", progress)
-	for _, orphan := range orphans {
-		fmt.Println(orphan)
+	_ = spinner.Stop()
+	pterm.Success.Println(fsutils.Plural(found, "file") + " found")
+	if global.write {
+		for _, orphan := range orphans {
+			fmt.Println(orphan)
+		}
 	}
 
 	return err

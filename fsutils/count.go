@@ -13,6 +13,9 @@ func CountFiles(ctx context.Context, root string, progress func(event Event) boo
 	pathCount[root] = 0
 
 	err := afero.Walk(Fs, root, func(path string, d fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
