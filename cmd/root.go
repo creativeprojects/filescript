@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/creativeprojects/filescript/term"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,9 @@ func initLog() {
 	}
 	if !global.write {
 		term.Info("running in dry-mode, please add '-w' flag to write to the disk")
+	}
+	if global.verbose {
+		pterm.EnableDebugMessages()
 	}
 }
 

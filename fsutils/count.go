@@ -14,7 +14,11 @@ func CountFiles(ctx context.Context, root string, progress func(event Event) boo
 
 	err := afero.Walk(Fs, root, func(path string, d fs.FileInfo, err error) error {
 		if err != nil {
-			return err
+			progress(Event{
+				Type: EventError,
+				Err:  err,
+			})
+			return nil
 		}
 		if ctx.Err() != nil {
 			return ctx.Err()

@@ -51,6 +51,9 @@ func empty(dir string) error {
 			totalFiles++
 			spinner.Text = fsutils.Plural(totalFiles, "file")
 		}
+		if event.Type == fsutils.EventError {
+			pterm.Error.Println(event.Err)
+		}
 		return true
 	})
 	if err != nil {
