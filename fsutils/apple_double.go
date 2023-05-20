@@ -5,10 +5,6 @@ import (
 	"strings"
 )
 
-const (
-	AppleDoublePrefix = "._"
-)
-
 func GetAppleDouble(filename string) string {
 	dir := filepath.Dir(filename)
 	base := filepath.Base(filename)

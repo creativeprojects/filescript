@@ -11,7 +11,6 @@ import (
 func TestUnzip(t *testing.T) {
 	Fs = afero.NewMemMapFs()
 	err := Unzip(context.Background(), "test.zip", []string{}, func(event Event) bool {
-		t.Logf("%+v", event)
 		return true
 	})
 	assert.NoError(t, err)
@@ -26,6 +25,31 @@ func TestUnzip(t *testing.T) {
 	assertDirExists(t, "test/zip/dir2", true)
 }
 
-func TestExclusion(t *testing.T) {
+func TestExclusions(t *testing.T) {
+	excludes := []string{"file1.txt", "sub2"}
+	fixtures := []struct {
+		filename string
+		excluded bool
+	}{
+		{"file1.txt", true},
+		{"dir1/file1.txt", true},
+		{"dir1/dir2/file1.txt", true},
+		{"sub2", true},
+		{"sub2/file1.txt", true},
+		{"sub3/sub2", true},
+		{"sub3/sub2/file.txt", true},
+		{"file2.txt", false},
+		{"dir1/file2.txt", false},
+		{"dir1/dir2/file2.txt", false},
+		{"sub1", false},
+		{"sub1/file2.txt", false},
+		{"sub3/sub1", false},
+		{"sub3/sub1/file.txt", false},
+	}
 
+	for _, fixture := range fixtures {
+		t.Run(fixture.filename, func(t *testing.T) {
+			assert.Equal(t, fixture.excluded, isExcluded(fixture.filename, excludes))
+		})
+	}
 }

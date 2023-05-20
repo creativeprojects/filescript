@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/creativeprojects/filescript/fsutils"
 	"github.com/creativeprojects/filescript/term"
@@ -30,7 +30,7 @@ func runUnzip(cmd *cobra.Command, args []string) {
 
 func unzip(dir string) error {
 	var err error
-	var totalDirs, found int
+	var totalDirs, found, unzipped int
 
 	if dir == "" {
 		dir, err = os.Getwd()
@@ -40,7 +40,7 @@ func unzip(dir string) error {
 	}
 	term.Debugf("searching zip files from %q", dir)
 
-	spinner, err := pterm.DefaultSpinner.WithRemoveWhenDone(true).WithText(getTextForUnzipSpinner(0, 0)).Start()
+	spinner, err := pterm.DefaultSpinner.WithRemoveWhenDone(true).WithText(getTextForUnzipSpinner(0, 0, 0)).Start()
 	if err != nil {
 		return err
 	}
@@ -52,10 +52,15 @@ func unzip(dir string) error {
 
 		case fsutils.EventProgressDir:
 			totalDirs++
-			spinner.Text = getTextForUnzipSpinner(totalDirs, found)
+			spinner.Text = getTextForUnzipSpinner(totalDirs, found, unzipped)
 
 		case fsutils.EventProgressFile:
 			found++
+			spinner.Text = getTextForUnzipSpinner(totalDirs, found, unzipped)
+
+		case fsutils.EventProgressFileProcessed:
+			unzipped++
+			spinner.Text = getTextForUnzipSpinner(totalDirs, found, unzipped)
 		}
 		return true
 	}
@@ -66,10 +71,11 @@ func unzip(dir string) error {
 	go func() {
 		for filename := range eventChan {
 			pterm.Debug.Println(filename)
-			dir := filepath.Join(filepath.Dir(filename), filepath.Base(filename[:len(filename)-len(filepath.Ext(filename))]))
-			if exists, err := fsutils.Exists(dir); exists && err == nil {
-				pterm.Warning.Printfln("directory %q already exists, skipping", dir)
+			err := fsutils.Unzip(context.Background(), filename, nil, progress)
+			if err != nil {
+				pterm.Error.Println(err)
 			}
+			time.Sleep(5 * time.Second)
 		}
 		wg.Done()
 	}()
@@ -77,13 +83,14 @@ func unzip(dir string) error {
 	err = fsutils.FindFiles(context.Background(), fsutils.WithExtension(".zip"), dir, eventChan, progress)
 	close(eventChan)
 	wg.Wait()
-	spinner.Stop()
+	_ = spinner.Stop()
 	return err
 }
 
-func getTextForUnzipSpinner(totalDirs, found int) string {
-	return fmt.Sprintf("%s - %s found",
+func getTextForUnzipSpinner(totalDirs, found, unzipped int) string {
+	return fmt.Sprintf("%s - %s found - %s unzipped",
 		fsutils.Plural(totalDirs, "directory"),
 		fsutils.Plural(found, "archive file"),
+		fsutils.Plural(unzipped, "file"),
 	)
 }

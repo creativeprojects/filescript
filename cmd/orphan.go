@@ -70,7 +70,7 @@ func orphans(dir string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 	defer stop()
 
-	orphans, err := fsutils.FindOrphans(ctx, dir, "._", "", progress)
+	orphans, err := fsutils.FindOrphans(ctx, dir, fsutils.AppleDoublePrefix, "", progress)
 	_ = spinner.Stop()
 	pterm.Success.Println(fsutils.Plural(found, "file") + " found")
 

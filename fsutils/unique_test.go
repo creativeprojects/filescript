@@ -31,8 +31,8 @@ func TestUniqueFilename(t *testing.T) {
 		{"/root/path/b", "/root/path/b-2"},
 		{"/root/path/c.txt", "/root/path/c.txt"},
 		{"/root/path/d.txt", "/root/path/d-3.txt"},
-		{"/root/path/b-1", "/root/path/b-2"},         // TODO
-		{"/root/path/c-1.txt", "/root/path/c-2.txt"}, // TODO
+		{"/root/path/b-1", "/root/path/b-2"},
+		{"/root/path/c-1.txt", "/root/path/c-2.txt"},
 	}
 
 	for _, fixture := range fixtures {
