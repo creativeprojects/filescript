@@ -85,9 +85,3 @@ func TestMoveAllPerYear(t *testing.T) {
 	assertFileExists(t, "/root/path/2010/d-1", true)
 	assertFileExists(t, "/root/path/2010/._d-1", false)
 }
-
-func assertFileExists(t *testing.T, filename string, exists bool) {
-	found, err := afero.Exists(Fs, filename)
-	assert.NoError(t, err)
-	assert.Equalf(t, exists, found, "file %q", filename)
-}

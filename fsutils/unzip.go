@@ -5,11 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
-func Unzip(ctx context.Context, filename string, progress func(event Event) bool) error {
+func Unzip(ctx context.Context, filename string, exclude []string, progress func(event Event) bool) error {
 	extractTo := filepath.Join(filepath.Dir(filename), filepath.Base(filename[:len(filename)-len(filepath.Ext(filename))]))
 	err := Fs.Mkdir(extractTo, 0755)
 	if err != nil {
@@ -45,11 +46,12 @@ func Unzip(ctx context.Context, filename string, progress func(event Event) bool
 		}
 		defer input.Close()
 
-		output, err := Fs.Create(filepath.Join(extractTo, f.Name))
+		output, err := Fs.OpenFile(filepath.Join(extractTo, f.Name), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0655)
 		if err != nil {
 			return err
 		}
 		defer output.Close()
+
 		written, err := io.Copy(output, input)
 		if err != nil {
 			return err
@@ -63,4 +65,16 @@ func Unzip(ctx context.Context, filename string, progress func(event Event) bool
 		})
 	}
 	return nil
+}
+
+func isExcluded(filename string, excludes []string) bool {
+	parts := strings.Split(filename, "/")
+	for _, part := range parts {
+		for _, exclude := range excludes {
+			if part == exclude {
+				return true
+			}
+		}
+	}
+	return false
 }
