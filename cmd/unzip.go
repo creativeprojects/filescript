@@ -70,12 +70,15 @@ func unzip(dir string) error {
 	wg.Add(1)
 	go func() {
 		for filename := range eventChan {
-			pterm.Debug.Println(filename)
-			err := fsutils.Unzip(context.Background(), filename, nil, progress)
-			if err != nil {
-				pterm.Error.Println(err)
+			if global.write {
+				pterm.Debug.Println(filename)
+				err := fsutils.Unzip(context.Background(), filename, nil, progress)
+				if err != nil {
+					pterm.Error.Println(err)
+				}
+			} else {
+				pterm.Info.Printf("would unzip %q\n", filename)
 			}
-			time.Sleep(5 * time.Second)
 		}
 		wg.Done()
 	}()
@@ -83,6 +86,7 @@ func unzip(dir string) error {
 	err = fsutils.FindFiles(context.Background(), fsutils.WithExtension(".zip"), dir, eventChan, progress)
 	close(eventChan)
 	wg.Wait()
+	time.Sleep(2 * time.Second)
 	_ = spinner.Stop()
 	return err
 }

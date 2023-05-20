@@ -39,10 +39,19 @@ func Unzip(ctx context.Context, filename string, exclude []string, progress func
 				Type:   EventProgressDir,
 				SrcDir: f.Name,
 			})
-			err = Fs.Mkdir(filepath.Join(extractTo, f.Name), 0755)
+			dirname := filepath.Join(extractTo, f.Name)
+			err = Fs.Mkdir(dirname, 0755)
 			if err != nil {
 				return err
 			}
+			// a directory modification time will be set when the files are extracted
+			// by deferring this call, we set the modification time once all files have been extracted
+			defer func() {
+				err = Fs.Chtimes(dirname, time.Now(), f.Modified)
+				if err != nil {
+					pterm.Warning.Println(err)
+				}
+			}()
 			continue
 		}
 		if isExcluded(f.Name, exclude) {
