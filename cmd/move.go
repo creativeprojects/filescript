@@ -1,34 +1,34 @@
 package cmd
 
 import (
-	"flag"
+	"context"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/creativeprojects/filescript/fsutils"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
 var runMoveCmd = &cobra.Command{
 	Use:   "move",
 	Short: "Move files in subfolders per year",
-	RunE:  runMove,
+	Run:   runMove,
 }
 
 func init() {
 	rootCmd.AddCommand(runMoveCmd)
 }
 
-func runMove(cmd *cobra.Command, args []string) error {
-	var dir string
-	var err error
+func runMove(cmd *cobra.Command, args []string) {
+	err := movePerYear(global.dir)
+	handleError(err)
+}
 
-	flag.StringVar(&dir, "d", "", "directory where to move files per year")
-	flag.Parse()
+func movePerYear(dir string) error {
+	var err error
+	var filesFound, filesProcessed int
 
 	if dir == "" {
 		dir, err = os.Getwd()
@@ -37,42 +37,37 @@ func runMove(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	entries, err := os.ReadDir(dir)
+	pterm.Debug.Printf("searching zip files from %q\n", dir)
+
+	spinner, err := pterm.DefaultSpinner.WithRemoveWhenDone(true).WithText(getTextForMovePerYear(0, 0)).Start()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		if strings.HasPrefix(entry.Name(), ".") {
-			continue
-		}
-		info, err := entry.Info()
-		if err != nil {
-			fmt.Printf("cannot stat %q: %s", entry.Name(), err)
-			continue
-		}
-		year := strconv.Itoa(info.ModTime().Year())
-		if len(year) != 4 {
-			continue
-		}
-		// fmt.Printf("%s: %q\n", year, entry.Name())
-		err = os.MkdirAll(filepath.Join(dir, year), 0777)
-		if err != nil {
-			log.Fatal(err)
-		}
-		orig := filepath.Join(dir, entry.Name())
-		moveTo := filepath.Join(dir, year, entry.Name())
+	progress := func(event fsutils.Event) bool {
+		switch event.Type {
+		case fsutils.EventError:
+			pterm.Error.Println(event.Err)
 
-		newpath, err := fsutils.Rename(orig, moveTo)
-		if err != nil {
-			log.Fatal(err)
+		case fsutils.EventProgressFile:
+			filesFound++
+			spinner.Text = getTextForMovePerYear(filesFound, filesProcessed)
+
+		case fsutils.EventProgressFileProcessed:
+			filesProcessed++
+			spinner.Text = getTextForMovePerYear(filesFound, filesProcessed)
 		}
-		if newpath != moveTo {
-			fmt.Printf("* file \n   %q renamed to\n   %q\n", orig, newpath)
-		}
+		return true
 	}
-	return nil
+
+	err = fsutils.MoveAllPerYear(context.Background(), dir, progress, !global.write)
+	_ = spinner.Stop()
+	return err
+}
+
+func getTextForMovePerYear(filesFound, filesProcessed int) string {
+	return fmt.Sprintf("%s found - %s moved",
+		fsutils.Plural(filesFound, "file"),
+		fsutils.Plural(filesProcessed, "file"),
+	)
 }

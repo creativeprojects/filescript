@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pterm/pterm"
 	"github.com/spf13/afero"
 )
 
@@ -24,7 +25,7 @@ func Rename(oldpath, newpath string) (string, error) {
 	return newpath, Fs.Rename(oldpath, newpath)
 }
 
-func MoveAllPerYear(ctx context.Context, dir string, progress func(event Event) bool) error {
+func MoveAllPerYear(ctx context.Context, dir string, progress func(event Event) bool, dryRun bool) error {
 	moveFunc := func(entry fs.FileInfo) error {
 		progress(Event{
 			Type:        EventProgressFile,
@@ -40,20 +41,26 @@ func MoveAllPerYear(ctx context.Context, dir string, progress func(event Event) 
 		if len(year) != 4 {
 			return nil
 		}
-		err := Fs.MkdirAll(filepath.Join(dir, year), 0777)
-		if err != nil {
-			return err
-		}
 		orig := filepath.Join(dir, entry.Name())
 		moveTo := filepath.Join(dir, year, entry.Name())
-		newpath, err := Rename(orig, moveTo)
-		if err != nil {
-			progress(Event{
-				Type:        EventError,
-				Err:         err,
-				SrcFilename: orig,
-				DstFilename: moveTo,
-			})
+		newpath := moveTo
+		if dryRun {
+			pterm.Info.Printf("would move %q to %q\n", orig, newpath)
+		} else {
+			err := Fs.MkdirAll(filepath.Join(dir, year), DirectoryPermission)
+			if err != nil {
+				return err
+			}
+			newpath, err := Rename(orig, moveTo)
+			if err != nil {
+				progress(Event{
+					Type:        EventError,
+					Err:         err,
+					SrcFilename: orig,
+					DstFilename: moveTo,
+				})
+			}
+			pterm.Debug.Printf("moving %q to %q\n", orig, newpath)
 		}
 		progress(Event{
 			Type:        EventProgressFileProcessed,
