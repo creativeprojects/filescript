@@ -69,15 +69,25 @@ func unzip(dir string) error {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
+		deletion := []string{}
 		for filename := range eventChan {
 			if global.write {
 				pterm.Debug.Println(filename)
-				err := fsutils.Unzip(context.Background(), filename, nil, progress)
+				err := fsutils.Unzip(context.Background(), filename, []string{"thumbs"}, progress)
 				if err != nil {
 					pterm.Error.Println(err)
+					continue
 				}
+				deletion = append(deletion, filename)
 			} else {
 				pterm.Info.Printf("would unzip %q\n", filename)
+			}
+		}
+		pterm.Success.Printf("deleting %d files\n", len(deletion))
+		for _, filename := range deletion {
+			err := os.Remove(filename)
+			if err != nil {
+				pterm.Error.Println(err)
 			}
 		}
 		wg.Done()

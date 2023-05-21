@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ func Unzip(ctx context.Context, filename string, exclude []string, progress func
 				SrcDir: f.Name,
 			})
 			dirname := filepath.Join(extractTo, f.Name)
-			err = Fs.Mkdir(dirname, 0755)
+			err = Fs.MkdirAll(dirname, 0755)
 			if err != nil {
 				return err
 			}
@@ -87,6 +88,13 @@ func unzipFile(f *zip.File, extractTo string) (string, error) {
 	outputFilename, err := FindUniqueName(filepath.Join(extractTo, f.Name))
 	if err != nil {
 		return "", err
+	}
+	dirpath := path.Dir(outputFilename)
+	if dirpath != "" {
+		err = Fs.MkdirAll(dirpath, DirectoryPermission)
+		if err != nil {
+			return "", err
+		}
 	}
 	output, err := Fs.OpenFile(outputFilename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0655)
 	if err != nil {
