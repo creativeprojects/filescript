@@ -8,16 +8,22 @@ import (
 	"github.com/spf13/afero"
 )
 
-type FileMatcher func(filename string) bool
+type FileMatcher func(filename string, fileinfo fs.FileInfo) bool
 
 func WithExtension(extension string) FileMatcher {
-	return func(filename string) bool {
+	return func(filename string, fileinfo fs.FileInfo) bool {
 		return strings.HasSuffix(filename, extension)
 	}
 }
 
+func WithExecutionBit() FileMatcher {
+	return func(filename string, fileinfo fs.FileInfo) bool {
+		return fileinfo.Mode().Perm()&0111 != 0
+	}
+}
+
 func FindFiles(ctx context.Context, matcher FileMatcher, root string, found chan string, progress func(event Event) bool) error {
-	err := afero.Walk(Fs, root, func(path string, d fs.FileInfo, err error) error {
+	err := afero.Walk(Fs, root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			progress(Event{
 				Type: EventError,
@@ -33,7 +39,7 @@ func FindFiles(ctx context.Context, matcher FileMatcher, root string, found chan
 			return nil
 		}
 
-		if d.IsDir() {
+		if info.IsDir() {
 			progress(Event{
 				Type:   EventProgressDir,
 				SrcDir: path,
@@ -41,7 +47,7 @@ func FindFiles(ctx context.Context, matcher FileMatcher, root string, found chan
 			return nil
 		}
 
-		if matcher(path) {
+		if matcher(path, info) {
 			progress(Event{
 				Type:        EventProgressFile,
 				SrcFilename: path,
