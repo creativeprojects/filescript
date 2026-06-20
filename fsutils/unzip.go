@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -113,12 +114,10 @@ func unzipFile(f *zip.File, extractTo string) (string, error) {
 }
 
 func isExcluded(filename string, excludes []string) bool {
-	parts := strings.Split(filename, "/")
-	for _, part := range parts {
-		for _, exclude := range excludes {
-			if part == exclude {
-				return true
-			}
+	parts := strings.SplitSeq(filename, "/")
+	for part := range parts {
+		if slices.Contains(excludes, part) {
+			return true
 		}
 	}
 	return false

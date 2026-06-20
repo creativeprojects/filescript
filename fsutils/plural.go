@@ -15,8 +15,8 @@ func Plural(count int, word string) string {
 	if count == 1 {
 		return "1 " + word
 	}
-	if strings.HasSuffix(word, "y") {
-		return strconv.Itoa(count) + " " + strings.TrimSuffix(word, "y") + "ies"
+	if before, ok := strings.CutSuffix(word, "y"); ok {
+		return strconv.Itoa(count) + " " + before + "ies"
 	}
 	return strconv.Itoa(count) + " " + word + "s"
 }

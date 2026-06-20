@@ -67,8 +67,7 @@ func unzip(dir string) error {
 
 	var eventChan = make(chan string, 1000)
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
+	wg.Go(func() {
 		deletion := []string{}
 		for filename := range eventChan {
 			if global.write {
@@ -90,8 +89,7 @@ func unzip(dir string) error {
 				pterm.Error.Println(err)
 			}
 		}
-		wg.Done()
-	}()
+	})
 
 	err = fsutils.FindFiles(context.Background(), fsutils.WithExtension(".zip"), dir, eventChan, progress)
 	close(eventChan)

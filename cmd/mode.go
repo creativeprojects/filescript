@@ -64,8 +64,7 @@ func filemode(dir string) error {
 
 	var eventChan = make(chan string, 1000)
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
+	wg.Go(func() {
 		for filename := range eventChan {
 			info, err := os.Stat(filename)
 			if err != nil {
@@ -83,8 +82,7 @@ func filemode(dir string) error {
 				pterm.Info.Printf("would fix %q from %#o to %#o\n", filename, info.Mode(), mode)
 			}
 		}
-		wg.Done()
-	}()
+	})
 
 	err = fsutils.FindFiles(context.Background(), fsutils.WithExecutionBit(), dir, eventChan, progress)
 	close(eventChan)

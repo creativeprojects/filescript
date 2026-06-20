@@ -1,6 +1,6 @@
 module github.com/creativeprojects/filescript
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/creativeprojects/go-selfupdate v1.5.2
