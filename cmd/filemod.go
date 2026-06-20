@@ -15,8 +15,8 @@ import (
 
 var fileModeCmd = &cobra.Command{
 	Use:     "mode",
-	Aliases: []string{"filemode", "unexecute"},
-	Short:   "Remove execution permission from files, add execution permission to directories.",
+	Aliases: []string{"filemod", "unexecute"},
+	Short:   "Remove execution permission from files.",
 	Run:     runFileMode,
 }
 

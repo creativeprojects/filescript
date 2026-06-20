@@ -22,6 +22,12 @@ func WithExecutionBit() FileMatcher {
 	}
 }
 
+func WithoutExecutionBit() FileMatcher {
+	return func(filename string, fileinfo fs.FileInfo) bool {
+		return fileinfo.Mode().Perm()&0111 == 0
+	}
+}
+
 func FindFiles(ctx context.Context, matcher FileMatcher, root string, found chan string, progress func(event Event) bool) error {
 	err := afero.Walk(Fs, root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -55,6 +61,37 @@ func FindFiles(ctx context.Context, matcher FileMatcher, root string, found chan
 			found <- path
 			return nil
 		}
+		return nil
+	})
+	return err
+}
+
+func FindDirs(ctx context.Context, matcher FileMatcher, root string, found chan string, progress func(event Event) bool) error {
+	err := afero.Walk(Fs, root, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			progress(Event{
+				Type: EventError,
+				Err:  err,
+			})
+			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
+		if path == root {
+			return nil
+		}
+
+		if info.IsDir() && matcher(path, info) {
+			progress(Event{
+				Type:   EventProgressDir,
+				SrcDir: path,
+			})
+			found <- path
+			return nil
+		}
+
 		return nil
 	})
 	return err
